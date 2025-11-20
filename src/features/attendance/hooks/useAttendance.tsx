@@ -54,8 +54,17 @@ export const useAttendance = () => {
         api.get('/staff')
       ]);
       
-      setMeetings(meetingsResponse.data || []);
-      setStaff(staffResponse.data || []);
+      // Handle paginated response from backend
+      const meetingsData = Array.isArray(meetingsResponse.data) 
+        ? meetingsResponse.data 
+        : (meetingsResponse.data?.data || []);
+      
+      const staffData = Array.isArray(staffResponse.data)
+        ? staffResponse.data
+        : (staffResponse.data?.data || []);
+      
+      setMeetings(meetingsData);
+      setStaff(staffData);
     } catch (err) {
       console.error('Error fetching initial data:', err);
       setError(handleApiError(err) || 'Failed to load data');

@@ -141,6 +141,11 @@ const AttendancePage = () => {
     }
   };
 
+  // Clear selection
+  const clearSelection = () => {
+    setSelectedParticipants([]);
+  };
+
   // Export attendance
   const exportAttendance = () => {
     if (!selectedMeeting || participants.length === 0) return;
@@ -480,21 +485,21 @@ const AttendancePage = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={bulkMarkPresent}
+                      onClick={handleBulkMarkPresent}
                       className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors shadow-sm"
                     >
                       <UserCheck className="h-4 w-4" />
                       <span className="font-medium hidden sm:inline">Mark Present</span>
                     </button>
                     <button
-                      onClick={bulkMarkAbsent}
+                      onClick={handleBulkMarkAbsent}
                       className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm"
                     >
                       <UserX className="h-4 w-4" />
                       <span className="font-medium hidden sm:inline">Mark Absent</span>
                     </button>
                     <button
-                      onClick={bulkRemoveParticipants}
+                      onClick={handleBulkRemove}
                       className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors shadow-sm"
                     >
                       <Trash2 className="h-4 w-4" />
