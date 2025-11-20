@@ -1,5 +1,5 @@
 const config = {
-  API_BASE_URL: process.env.REACT_APP_API_URL || 'https://minutes-of-meeting-management-backend.onrender.com/api',
+  API_BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8800/api',
   
   MAX_FILE_SIZE: 10 * 1024 * 1024,
   ALLOWED_FILE_TYPES: [

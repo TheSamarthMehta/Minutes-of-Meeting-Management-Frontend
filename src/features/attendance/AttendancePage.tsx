@@ -60,6 +60,7 @@ const AttendancePage = () => {
       return () => clearTimeout(timer);
     }
   }, [hasUnsavedChanges]);
+  console.log(pendingChanges);
 
   // Handle single add
   const handleSingleAdd = async () => {

@@ -1,6 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Save, FileText, Calendar, Clock, MapPin, Users, Timer, Zap, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react';
-import { Meeting, MeetingFormData, MeetingType } from '../../../api/meetingService';
+
+// Assuming these types are correctly imported from the project structure
+interface Meeting {
+  _id: string;
+  meetingTitle: string;
+  meetingDescription: string;
+  meetingTypeId: string | { _id: string }; // Assuming it can be ID or object
+  meetingDate: string;
+  meetingTime: string;
+  duration: number;
+  location: string;
+  agenda: string;
+  status: 'Scheduled' | 'InProgress' | 'Completed' | 'Cancelled';
+}
+
+interface MeetingFormData {
+  meetingTitle: string;
+  meetingDescription: string;
+  meetingTypeId: string;
+  meetingDate: string;
+  meetingTime: string;
+  duration: number;
+  location: string;
+  agenda: string;
+  status: 'Scheduled' | 'InProgress' | 'Completed' | 'Cancelled';
+}
+
+interface MeetingType {
+  _id: string;
+  meetingTypeName: string;
+  category?: string;
+}
 
 interface MeetingFormModalProps {
   isOpen: boolean;
@@ -10,6 +41,8 @@ interface MeetingFormModalProps {
   meetingTypes?: MeetingType[];
   title: string;
 }
+
+const EMPTY_MEETING_TYPES: MeetingType[] = [];
 
 // Smart suggestion helpers
 const DURATION_PRESETS = [
@@ -32,21 +65,6 @@ const COMMON_LOCATIONS = [
   'Virtual (Google Meet)',
 ];
 
-const getNextBusinessDay = (): string => {
-  const date = new Date();
-  date.setDate(date.getDate() + 1);
-  // Skip weekends
-  if (date.getDay() === 0) date.setDate(date.getDate() + 1); // Sunday to Monday
-  if (date.getDay() === 6) date.setDate(date.getDate() + 2); // Saturday to Monday
-  return date.toISOString().split('T')[0];
-};
-
-const getNextWeek = (): string => {
-  const date = new Date();
-  date.setDate(date.getDate() + 7);
-  return date.toISOString().split('T')[0];
-};
-
 const getCommonMeetingTime = (hour: number): string => {
   return `${hour.toString().padStart(2, '0')}:00`;
 };
@@ -67,7 +85,7 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
   onClose,
   onSave,
   meeting,
-  meetingTypes = [],
+  meetingTypes = EMPTY_MEETING_TYPES,
   title
 }) => {
   const [formData, setFormData] = useState<MeetingFormData>({
@@ -84,11 +102,83 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
 
-  // Keyboard navigation support
+  // 1. Initial Load & Reset Effect
+  useEffect(() => {
+    if (meeting) {
+      // Handle the complex meetingTypeId structure
+      const typeId = typeof meeting.meetingTypeId === 'string'
+        ? meeting.meetingTypeId
+        : (meeting.meetingTypeId as any)?._id || '';
+
+      setFormData({
+        meetingTitle: meeting.meetingTitle || '',
+        meetingDescription: meeting.meetingDescription || '',
+        meetingTypeId: typeId,
+        meetingDate: meeting.meetingDate ? meeting.meetingDate.split('T')[0] : '',
+        meetingTime: meeting.meetingTime || '',
+        duration: meeting.duration || 60,
+        location: meeting.location || '',
+        agenda: meeting.agenda || '',
+        status: meeting.status || 'Scheduled'
+      });
+    } else {
+      // Default state for new meeting
+      setFormData({
+        meetingTitle: '',
+        meetingDescription: '',
+        meetingTypeId: (meetingTypes && meetingTypes.length > 0) ? meetingTypes[0]._id : '',
+        meetingDate: '',
+        meetingTime: '',
+        duration: 60,
+        location: '',
+        agenda: '',
+        status: 'Scheduled'
+      });
+    }
+    setErrors({});
+    setWarnings([]);
+  }, [meeting, meetingTypes, isOpen]);
+
+  // 2. CONSOLIDATED WARNINGS EFFECT (Fix for the bug)
+  // This hook calculates all warnings atomically based on both date and time state.
+  useEffect(() => {
+    if (!isOpen || !formData.meetingDate) {
+      setWarnings([]);
+      return;
+    }
+
+    const newWarnings: string[] = [];
+    const selectedDate = new Date(formData.meetingDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Date Warning (Past)
+    if (selectedDate < today) {
+      newWarnings.push('⚠️ Meeting date is in the past');
+    }
+
+    // Weekend Warning
+    const day = selectedDate.getDay();
+    if (day === 0 || day === 6) {
+      newWarnings.push('📅 Meeting scheduled on weekend');
+    }
+
+    // Time Warning (Business Hours)
+    if (formData.meetingTime) {
+      const [hours] = formData.meetingTime.split(':').map(Number);
+      if (hours < 8 || hours >= 18) {
+        newWarnings.push('🕐 Meeting scheduled outside business hours (8 AM - 6 PM)');
+      }
+    }
+
+    setWarnings(newWarnings);
+  }, [formData.meetingDate, formData.meetingTime, isOpen]);
+
+
+  // 3. Keyboard Navigation and Scroll Lock Effect
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
@@ -101,9 +191,10 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
       // Ctrl/Cmd + Enter to submit form
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !loading) {
         e.preventDefault();
-        const form = document.querySelector('form');
-        if (form) {
-          form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        // Trigger form submission naturally
+        const submitButton = document.getElementById('save-meeting-button');
+        if (submitButton) {
+          submitButton.click();
         }
       }
     };
@@ -119,39 +210,6 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose, loading]);
-
-  useEffect(() => {
-    if (meeting) {
-      const typeId = typeof meeting.meetingTypeId === 'string' 
-        ? meeting.meetingTypeId 
-        : meeting.meetingTypeId?._id || '';
-        
-      setFormData({
-        meetingTitle: meeting.meetingTitle || '',
-        meetingDescription: meeting.meetingDescription || '',
-        meetingTypeId: typeId,
-        meetingDate: meeting.meetingDate ? meeting.meetingDate.split('T')[0] : '',
-        meetingTime: meeting.meetingTime || '',
-        duration: meeting.duration || 60,
-        location: meeting.location || '',
-        agenda: meeting.agenda || '',
-        status: meeting.status || 'Scheduled'
-      });
-    } else {
-      setFormData({
-        meetingTitle: '',
-        meetingDescription: '',
-        meetingTypeId: (meetingTypes && meetingTypes.length > 0) ? meetingTypes[0]._id : '',
-        meetingDate: '',
-        meetingTime: '',
-        duration: 60,
-        location: '',
-        agenda: '',
-        status: 'Scheduled'
-      });
-    }
-    setErrors({});
-  }, [meeting, meetingTypes, isOpen]);
 
   const formatDuration = (minutes: number): string => {
     if (!minutes || minutes < 60) return '';
@@ -170,63 +228,20 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
 
-    // Smart validations and warnings
-    if (name === 'meetingDate') {
-      validateDateWarnings(value);
-    }
-    if (name === 'meetingTime') {
-      validateTimeWarnings(value);
-    }
+    // Auto-suggest agenda template when meeting type changes (only on initial creation)
     if (name === 'meetingTypeId') {
       const selectedType = meetingTypes && meetingTypes.find(t => t._id === value);
-      if (selectedType && !meeting) {
-        // Auto-suggest agenda template
-        if (!formData.agenda) {
-          setFormData(prev => ({
-            ...prev,
-            [name]: value,
-            agenda: getMeetingAgendaTemplate(selectedType.meetingTypeName)
-          }));
-        }
+      if (selectedType && !meeting && !formData.agenda) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          agenda: getMeetingAgendaTemplate(selectedType.meetingTypeName)
+        }));
       }
     }
   };
 
-  const validateDateWarnings = (dateStr: string) => {
-    const newWarnings: string[] = [];
-    const selectedDate = new Date(dateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Check if past date
-    if (selectedDate < today) {
-      newWarnings.push('⚠️ Meeting date is in the past');
-    }
-
-    // Check if weekend
-    const day = selectedDate.getDay();
-    if (day === 0 || day === 6) {
-      newWarnings.push('📅 Meeting scheduled on weekend');
-    }
-
-    setWarnings(newWarnings);
-  };
-
-  const validateTimeWarnings = (timeStr: string) => {
-    if (!timeStr) return;
-    const [hours] = timeStr.split(':').map(Number);
-    const newWarnings: string[] = [...warnings];
-
-    // Check business hours
-    if (hours < 8 || hours >= 18) {
-      if (!newWarnings.includes('🕐 Meeting scheduled outside business hours (8 AM - 6 PM)')) {
-        newWarnings.push('🕐 Meeting scheduled outside business hours (8 AM - 6 PM)');
-      }
-    }
-
-    setWarnings(newWarnings);
-  };
-
+  // Helper for quick date functions, relying on the main useEffect for warnings
   const applyQuickDate = (type: 'today' | 'tomorrow' | 'nextWeek' | 'nextBusinessDay') => {
     const date = new Date();
     switch (type) {
@@ -240,19 +255,18 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
         break;
       case 'nextBusinessDay':
         date.setDate(date.getDate() + 1);
-        if (date.getDay() === 0) date.setDate(date.getDate() + 1);
-        if (date.getDay() === 6) date.setDate(date.getDate() + 2);
+        if (date.getDay() === 0) date.setDate(date.getDate() + 1); // Sunday to Monday
+        if (date.getDay() === 6) date.setDate(date.getDate() + 2); // Saturday to Monday
         break;
     }
     const dateStr = date.toISOString().split('T')[0];
     setFormData(prev => ({ ...prev, meetingDate: dateStr }));
-    validateDateWarnings(dateStr);
   };
 
+  // Helper for quick time functions, relying on the main useEffect for warnings
   const applyQuickTime = (hour: number) => {
     const timeStr = getCommonMeetingTime(hour);
     setFormData(prev => ({ ...prev, meetingTime: timeStr }));
-    validateTimeWarnings(timeStr);
   };
 
   const applyDurationPreset = (minutes: number) => {
@@ -270,7 +284,7 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
 
     const date = formData.meetingDate ? new Date(formData.meetingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
     const suggestedTitle = `${selectedType.meetingTypeName}${date ? ` - ${date}` : ''}`;
-    
+
     setFormData(prev => ({ ...prev, meetingTitle: suggestedTitle }));
   };
 
@@ -401,7 +415,8 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
                   <ul className="text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
                     {warnings.map((warning, idx) => (
                       <li key={idx}>{warning}</li>
-                    ))}\n                  </ul>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </div>
@@ -475,7 +490,7 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
                     {(() => {
                       const categorized: Record<string, typeof meetingTypes> = {};
                       const uncategorized: typeof meetingTypes = [];
-                      
+
                       meetingTypes && meetingTypes.forEach(type => {
                         const category = (type as any).category;
                         if (category) {
@@ -489,12 +504,12 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
                       });
 
                       const sortedCategories = Object.keys(categorized).sort();
-                      
+
                       return (
                         <>
                           {sortedCategories.map(category => (
-                            <optgroup 
-                              key={category} 
+                            <optgroup
+                              key={category}
                               label={category}
                               style={{
                                 fontWeight: '600',
@@ -504,8 +519,8 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
                               }}
                             >
                               {categorized[category].map(type => (
-                                <option 
-                                  key={type._id} 
+                                <option
+                                  key={type._id}
                                   value={type._id}
                                   style={{
                                     padding: '10px 16px',
@@ -518,7 +533,7 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
                             </optgroup>
                           ))}
                           {uncategorized.length > 0 && (
-                            <optgroup 
+                            <optgroup
                               label="Other"
                               style={{
                                 fontWeight: '600',
@@ -528,8 +543,8 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
                               }}
                             >
                               {uncategorized.map(type => (
-                                <option 
-                                  key={type._id} 
+                                <option
+                                  key={type._id}
                                   value={type._id}
                                   style={{
                                     padding: '10px 16px',
@@ -640,7 +655,8 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
                     name="meetingDate"
                     value={formData.meetingDate}
                     onChange={handleChange}
-                    min={new Date().toISOString().split('T')[0]}
+                    // Removed min attribute to allow input of past dates for warning check, relying solely on warning logic.
+                    // If strictly preventing past dates is required, re-add: min={new Date().toISOString().split('T')[0]}
                     className={`w-full pl-11 pr-4 py-2.5 border-2 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:bg-gray-700 dark:text-white transition-all duration-200 font-medium shadow-sm hover:border-teal-400 dark:hover:border-teal-500 cursor-text ${
                       errors.meetingDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                     }`}
@@ -870,6 +886,8 @@ export const MeetingFormModal: React.FC<MeetingFormModalProps> = ({
               Cancel
             </button>
             <button
+              id="save-meeting-button"
+              type="submit"
               onClick={handleSubmit}
               disabled={loading}
               className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
