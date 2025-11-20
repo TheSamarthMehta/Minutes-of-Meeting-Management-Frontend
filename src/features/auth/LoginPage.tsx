@@ -79,31 +79,30 @@ const LoginPage = () => {
                 <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-cyan-200/20 dark:from-cyan-600/10 to-transparent rounded-full blur-3xl animate-pulse delay-1000"></div>
             </div>
 
-            <div className="w-full max-w-6xl relative z-10">
-                <div className="grid md:grid-cols-2 gap-8 items-center">
-                    {/* Left Side - Branding */}
-                    <div className="hidden md:block">
-                        <div className="space-y-6">
-                            <div className="inline-flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-teal-100 dark:border-teal-900">
+            <div className="w-full max-w-6xl mx-auto relative z-10 px-2 sm:px-4">
+                <div className="grid gap-8 lg:gap-12 md:grid-cols-2 items-center">
+                    {/* Left Side - Branding (visible on all screens, adapts layout) */}
+                    <div className="space-y-6 text-center md:text-left order-2 md:order-1">
+                        <div className="inline-flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-teal-100 dark:border-teal-900 mx-auto md:mx-0 w-max">
                                 <Sparkles className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Meeting Management System</span>
                             </div>
                             
-                            <h1 className="text-5xl font-bold text-gray-900 dark:text-white leading-tight">
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight">
                                 Welcome Back to
                                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400">
                                     MOM Manager
                                 </span>
                             </h1>
                             
-                            <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
+                        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 leading-relaxed max-w-xl mx-auto md:mx-0">
                                 Streamline your meetings, track minutes, and collaborate effectively with your team.
                             </p>
 
-                            <div className="space-y-4 pt-4">
-                                <div className="flex items-start gap-3">
-                                    <div className="flex-shrink-0 w-10 h-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
-                                        <Shield className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                        <div className="space-y-4 pt-2 sm:pt-4">
+                            <div className="flex items-start gap-3 text-left bg-white/80 dark:bg-gray-800/50 px-4 py-3 rounded-2xl shadow-sm border border-white/40 dark:border-gray-700">
+                                <div className="flex-shrink-0 w-10 h-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
+                                    <Shield className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-gray-900 dark:text-white">Secure & Reliable</h3>
@@ -111,9 +110,9 @@ const LoginPage = () => {
                                     </div>
                                 </div>
                                 
-                                <div className="flex items-start gap-3">
-                                    <div className="flex-shrink-0 w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center">
-                                        <Sparkles className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                            <div className="flex items-start gap-3 text-left bg-white/80 dark:bg-gray-800/50 px-4 py-3 rounded-2xl shadow-sm border border-white/40 dark:border-gray-700">
+                                <div className="flex-shrink-0 w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center">
+                                    <Sparkles className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-gray-900 dark:text-white">Smart Features</h3>
@@ -125,8 +124,8 @@ const LoginPage = () => {
                     </div>
 
                     {/* Right Side - Login Form */}
-                    <div className="w-full max-w-md mx-auto">
-                        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-8 md:p-10">
+                    <div className="w-full max-w-md mx-auto md:ml-auto order-1 md:order-2">
+                        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-6 sm:p-8 md:p-10">
                             {/* Header */}
                             <div className="text-center mb-8">
                                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl mb-4 shadow-lg">
