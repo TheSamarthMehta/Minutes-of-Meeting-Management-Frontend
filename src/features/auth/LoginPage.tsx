@@ -103,21 +103,20 @@ const LoginPage = () => {
                             <div className="flex items-start gap-3 text-left bg-white/80 dark:bg-gray-800/50 px-4 py-3 rounded-2xl shadow-sm border border-white/40 dark:border-gray-700">
                                 <div className="flex-shrink-0 w-10 h-10 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center">
                                     <Shield className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-white">Secure & Reliable</h3>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Enterprise-grade security for your data</p>
-                                    </div>
                                 </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">Secure & Reliable</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Enterprise-grade security for your data</p>
+                                </div>
+                            </div>
                                 
                             <div className="flex items-start gap-3 text-left bg-white/80 dark:bg-gray-800/50 px-4 py-3 rounded-2xl shadow-sm border border-white/40 dark:border-gray-700">
                                 <div className="flex-shrink-0 w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center">
                                     <Sparkles className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-white">Smart Features</h3>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">AI-powered insights and automation</p>
-                                    </div>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">Smart Features</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">AI-powered insights and automation</p>
                                 </div>
                             </div>
                         </div>
