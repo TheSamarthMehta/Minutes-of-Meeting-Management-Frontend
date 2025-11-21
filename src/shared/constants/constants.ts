@@ -1,5 +1,16 @@
+// Backend API base URL
+const getBaseUrl = (): string => {
+  // Check if there's an environment variable set
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // Use production backend URL
+  return 'https://minutes-of-meeting-management-backend.onrender.com/api';
+};
+
 const config = {
-  API_BASE_URL: process.env.REACT_APP_API_URL || 'https://minutes-of-meeting-management-backend.onrender.com/api',
+  API_BASE_URL: getBaseUrl(),
   
   MAX_FILE_SIZE: 10 * 1024 * 1024,
   ALLOWED_FILE_TYPES: [
